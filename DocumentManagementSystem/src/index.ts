@@ -15,6 +15,9 @@ const port = 80;
 app.use(morgan("dev"));
 app.use(cors());
 app.use(express.json());
+app.get("/", (_req, res) => {
+  res.send("DocumentManagementSystem Backend !");
+});
 app.use("/auth/google", googleAuthRouter);
 app.use("/api/contacts", contactsRouter);
 app.use("/api/documents", documentsRouter);
