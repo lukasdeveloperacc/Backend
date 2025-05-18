@@ -6,13 +6,13 @@ import { signJWT, getTokens } from "../../lib/auth/utils";
 
 const router = Router();
 
-router.get("/signin", async (_req, res) => {
-  // const { code } = req.body;
-
-  const code = process.env.TEST_CODE as string;
+router.post("/signin", async (req, res) => {
+  const { code } = req.body;
+  console.log("Code ", code);
   const { access_token, refresh_token, id_token } = (await getTokens(
     code
   )) as ITokenData;
+  console.log("Token : ", id_token);
   const { sub, name, email, picture } = jwt.decode(id_token) as IPayload;
 
   const { data: user } = await supabase
@@ -50,8 +50,8 @@ router.get("/signin", async (_req, res) => {
   return;
 });
 
-router.get("/signup", async (_req, res) => {
-  const code = process.env.TEST_CODE as string;
+router.post("/signup", async (req, res) => {
+  const { code } = req.body;
   const { access_token, refresh_token, id_token } = await getTokens(code);
   const { sub, name, email, picture } = jwt.decode(id_token) as IPayload;
 

@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import morgan from "morgan";
+import cors from "cors";
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ const app = express();
 const port = 80;
 
 app.use(morgan("dev"));
+app.use(cors());
 app.use(express.json());
 app.use("/auth/google", googleAuthRouter);
 app.use("/api/contacts", contactsRouter);

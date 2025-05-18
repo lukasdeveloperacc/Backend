@@ -7,6 +7,19 @@ import multer from "multer";
 const router = Router();
 const upload = multer();
 
+router.get("/", authenticateJWT, async (_req, res) => {
+  const { data: documents, error: docError } = await supabase
+    .from("documents")
+    .select("*");
+
+  if (docError) {
+    res.status(500).json({ error: "Failed to fetch documents." });
+    return;
+  }
+
+  res.status(200).json({ documents });
+});
+
 router.get("/:contactId", authenticateJWT, async (req, res) => {
   const contactId = req.params.contactId;
 

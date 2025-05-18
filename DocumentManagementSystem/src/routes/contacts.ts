@@ -14,13 +14,25 @@ router.get("/", async (_req: Request, res: Response): Promise<void> => {
   }
 });
 
+router.patch("/:id", async (req: Request, res: Response) => {
+  const { name, phone, address } = req.body;
+
+  const { data, error } = await supabase
+    .from("contacts")
+    .update([{ name, phone, address }])
+    .eq("id", req.params.id)
+    .select();
+
+  if (error) {
+    res.status(500).json({ error: error.message });
+    return;
+  } else {
+    res.status(201).json(data[0]);
+  }
+});
+
 router.post("/", async (req: Request, res: Response) => {
   const { name, phone, address } = req.body;
-  //   const { name, phone, address } = {
-  //     name: "test",
-  //     phone: "12341234",
-  //     address: "testaddress",
-  //   };
 
   const { data, error } = await supabase
     .from("contacts")
