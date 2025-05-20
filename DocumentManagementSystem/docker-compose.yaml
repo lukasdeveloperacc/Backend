@@ -5,9 +5,7 @@ services:
       dockerfile: Dockerfile
     image: document-management-system-backend:v0.1.0
     working_dir: /app
-    volumes:
-      - .:/app
-    ports:
-      - 1234:80
-    stdin_open: true 
-    tty: true
+    # volumes:
+    #   - .:/app
+    # ports:
+    #   - 1234:80

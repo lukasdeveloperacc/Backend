@@ -14,17 +14,36 @@ router.post("/signin", async (req, res) => {
   )) as ITokenData;
   console.log("Token : ", id_token);
   const { sub, name, email, picture } = jwt.decode(id_token) as IPayload;
-
+  console.log("Decoded token: ", { sub, name, email, picture });
   const { data: user } = await supabase
     .from("users")
     .select("*")
     .eq("google_id", sub)
     .single();
 
-  if (!user) {
-    res.status(403).json({ message: "Not registered user" });
+  let userId = user?.id;
 
-    return;
+  if (!user) {
+    const { data: newUser, error } = await supabase
+      .from("users")
+      .insert([
+        {
+          email,
+          name,
+          google_id: sub,
+          google_access_token: access_token,
+          google_refresh_token: refresh_token,
+          created_at: new Date().toISOString(),
+        },
+      ])
+      .select();
+
+    if (error) {
+      res.status(500).send("Internal server error");
+    } else {
+      userId = newUser[0].id;
+      console.log("User created");
+    }
   }
 
   const token = signJWT({ sub, name, email, picture });
@@ -39,53 +58,12 @@ router.post("/signin", async (req, res) => {
     .eq("google_id", sub);
 
   if (userError) {
-    res.status(500).json({ message: "Failt to fetch users from database" });
+    res.status(500).send("Fail to fetch users from database");
 
     return;
   }
 
-  console.log({ token });
-  res.status(200).json({ token });
-
-  return;
-});
-
-router.post("/signup", async (req, res) => {
-  const { code } = req.body;
-  const { access_token, refresh_token, id_token } = await getTokens(code);
-  const { sub, name, email, picture } = jwt.decode(id_token) as IPayload;
-
-  const { data: user } = await supabase
-    .from("users")
-    .select("*")
-    .eq("google_id", sub)
-    .single();
-
-  if (!user) {
-    const { error } = await supabase.from("users").insert([
-      {
-        email,
-        name,
-        google_id: sub,
-        google_access_token: access_token,
-        google_refresh_token: refresh_token,
-        created_at: new Date().toISOString(),
-      },
-    ]);
-
-    if (error) {
-      res.status(500).send("Internal server error");
-    } else {
-      const token = signJWT({ sub, name, email, picture });
-      res.status(200).json({ token });
-    }
-
-    return;
-  } else {
-    res.status(403).json({ message: "Already registered user" });
-
-    return;
-  }
+  res.status(200).json({ token, userId });
 });
 
 export default router;
