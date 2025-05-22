@@ -7,13 +7,14 @@ import multer from "multer";
 const router = Router();
 const upload = multer();
 
-router.get("/", authenticateJWT, async (_req, res) => {
+router.get("/:managerId", authenticateJWT, async (req, res) => {
   const { data: documents, error: docError } = await supabase
     .from("documents")
-    .select("*");
+    .select("*")
+    .eq("manager_id", req.params.managerId);
 
   if (docError) {
-    res.status(500).json({ error: "Failed to fetch documents." });
+    res.status(500).send("Failed to fetch documents.");
     return;
   }
 
@@ -29,7 +30,7 @@ router.get("/:contactId", authenticateJWT, async (req, res) => {
     .eq("contact_id", contactId);
 
   if (docError) {
-    res.status(500).json({ error: "Failed to fetch documents." });
+    res.status(500).send("Failed to fetch documents.");
     return;
   }
 
@@ -45,7 +46,7 @@ router.post(
     const file = req.file;
 
     if (!file) {
-      res.status(400).json({ error: "File is required." });
+      res.status(400).send("File is required.");
       return;
     }
 
@@ -56,7 +57,7 @@ router.post(
       .single();
 
     if (contactError) {
-      res.status(500).json({ error: "Failed to fetch contacts." });
+      res.status(500).send("Failed to fetch contacts.");
       return;
     }
 
@@ -69,7 +70,7 @@ router.post(
 
     if (currentUserError) {
       console.error(currentUserError);
-      res.status(500).json({ message: "Failed to fetch users." });
+      res.status(500).send("Failed to fetch users.");
       return;
     }
 
@@ -91,7 +92,7 @@ router.post(
 
       if (docError) {
         console.error(docError);
-        res.status(500).json({ error: "Fail to fetch from documents" });
+        res.status(500).send("Fail to fetch from documents");
       }
 
       if (!doc) {
