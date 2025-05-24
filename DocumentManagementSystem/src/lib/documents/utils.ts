@@ -54,9 +54,9 @@ export async function getOrCreateFolderIdFromGoogleDrive(
 }
 
 export async function uploadToGoogleDrive(
-  params: IGoogleDriveInput
+  params: IGoogleDriveInput,
+  saveDir: string
 ): Promise<IGoogleDriveOutput> {
-  const saveDir = `TestDocumentManagementSystem/test`;
   const auth = new google.auth.OAuth2();
   auth.setCredentials({ access_token: params.accessToken });
 
