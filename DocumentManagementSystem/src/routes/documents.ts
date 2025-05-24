@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { authenticateJWT } from "../lib/auth/middlewares";
 import { supabase } from "../lib/supabase";
 import { uploadToGoogleDrive } from "../lib/documents/utils";
@@ -7,19 +7,50 @@ import multer from "multer";
 const router = Router();
 const upload = multer();
 
-router.get("/:managerId", authenticateJWT, async (req, res) => {
-  const { data: documents, error: docError } = await supabase
-    .from("documents")
-    .select("*")
-    .eq("manager_id", req.params.managerId);
+router.get(
+  "/",
+  authenticateJWT,
+  async (req: Request, res: Response): Promise<void> => {
+    const managerId = req.query.managerId;
 
-  if (docError) {
-    res.status(500).send("Failed to fetch documents.");
-    return;
+    if (!managerId) {
+      res.status(400).json({ error: "managerId query parameter is required" });
+      return;
+    } else {
+      console.log({ managerId });
+    }
+
+    const { data: contacts, error: contactError } = await supabase
+      .from("contacts")
+      .select("*")
+      .eq("manager_id", managerId);
+
+    if (contactError) {
+      console.error("Failed to fecth contact");
+      res.status(200).json({ documents: [] });
+      return;
+    }
+
+    if (!contacts || contacts.length === 0) {
+      res.status(200).json({ documents: [] });
+      return;
+    }
+
+    const contactIds = contacts.map((contact) => contact.id);
+    const { data: documents, error: docError } = await supabase
+      .from("documents")
+      .select("*")
+      .in("contact_id", contactIds);
+
+    if (docError) {
+      console.error("Failed to fetch documents.");
+      res.status(500).json({ error: "Failed to fetch documents" });
+      return;
+    }
+
+    res.status(200).json({ documents });
   }
-
-  res.status(200).json({ documents });
-});
+);
 
 router.get("/:contactId", authenticateJWT, async (req, res) => {
   const contactId = req.params.contactId;
@@ -30,8 +61,7 @@ router.get("/:contactId", authenticateJWT, async (req, res) => {
     .eq("contact_id", contactId);
 
   if (docError) {
-    res.status(500).send("Failed to fetch documents.");
-    return;
+    console.error("Failed to fetch documents.");
   }
 
   res.status(200).json({ documents });
@@ -174,7 +204,9 @@ router.post(
 
           await supabase.from("documents").insert({
             contact_id: contactId,
-            file_name: file.originalname,
+            file_name: Buffer.from(file.originalname, "latin1").toString(
+              "utf-8"
+            ),
             uploaded_at: new Date().toISOString(),
             drive_url: info.webViewLink, // uploadToGoogleDrive 함수에서 return 받도록 수정
           });

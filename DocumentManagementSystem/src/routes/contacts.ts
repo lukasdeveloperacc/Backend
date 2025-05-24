@@ -44,8 +44,7 @@ router.post("/:managerId", async (req: Request, res: Response) => {
 
   const { data, error } = await supabase
     .from("contacts")
-    .insert([{ name, phone, address }])
-    .eq("manager_id", req.params.managerId)
+    .insert([{ name, phone, address, manager_id: req.params.managerId }])
     .select();
 
   if (error) {
