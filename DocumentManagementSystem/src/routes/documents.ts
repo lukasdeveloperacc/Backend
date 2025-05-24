@@ -107,11 +107,15 @@ router.post(
         // Upload
         try {
           console.log("Start uplaod");
+          const convertedFileName = Buffer.from(
+            file.originalname,
+            "latin1"
+          ).toString("utf-8");
           const info = await uploadToGoogleDrive(
             {
               accessToken: currentUser.google_access_token,
               fileBuffer: file.buffer,
-              fileName: file.originalname,
+              fileName: convertedFileName,
               mimeType: file.mimetype,
             },
             `DataManagementSystem/${contact.name}`
@@ -119,9 +123,7 @@ router.post(
 
           await supabase.from("documents").insert({
             contact_id: contactId,
-            file_name: Buffer.from(file.originalname, "latin1").toString(
-              "utf-8"
-            ),
+            file_name: convertedFileName,
             uploaded_at: new Date().toISOString(),
             drive_url: info.webViewLink, // uploadToGoogleDrive 함수에서 return 받도록 수정
           });
