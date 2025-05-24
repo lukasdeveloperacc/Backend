@@ -141,4 +141,19 @@ router.post(
   }
 );
 
+router.delete("/:documentId", authenticateJWT, async (req, res) => {
+  const { error } = await supabase
+    .from("documents")
+    .delete()
+    .eq("id", req.params.documentId);
+
+  if (error) {
+    console.error("Failed to delete document:", error);
+    res.status(500).json({ error: "Failed to delete document" });
+    return;
+  }
+
+  res.status(200).json({ message: "Document deleted successfully" });
+});
+
 export default router;
